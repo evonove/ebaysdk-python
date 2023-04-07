@@ -249,22 +249,27 @@ def dict2xml(root, escape_xml=False):
                                'value': smart_encode(value), 'attrs_sp': attrs_sp})
 
             elif isinstance(root[key], list):
-
+                # NOTE: changing this behavior.
+                # When serializing a list we don't want n times the list with
+                # one element (default behavior) but we want a list with n 
+                # elements
+                elements = ""
+                attrs = []
                 for item in root[key]:
-                    attrs, value = attribute_check(item)
+                    item_attrs, value = attribute_check(item)
+                    attrs += item_attrs
 
                     if value is None:
                         value = dict2xml(item, escape_xml)
                     elif isinstance(value, dict):
                         value = dict2xml(value, escape_xml)
 
-                    attrs_sp = ''
-                    if len(attrs) > 0:
-                        attrs_sp = ' '
+                    elements += value
 
-                    xml = str('{xml}<{tag}{attrs_sp}{attrs}>{value}</{tag}>') \
-                        .format(**{'xml': str(xml), 'tag': key, 'attrs': ' '.join(attrs), 'value': smart_encode(value),
-                                   'attrs_sp': attrs_sp})
+                attrs_sp = ''
+                if len(attrs) > 0:
+                    attrs_sp = ' '
+                xml = str('{xml}<{tag}{attrs_sp}{attrs}>{value}</{tag}>').format(**{'xml': str(xml), 'tag': key, 'attrs': ' '.join(attrs), 'attrs_sp': attrs_sp, 'value': smart_encode(elements)})
 
             else:
                 value = root[key]
